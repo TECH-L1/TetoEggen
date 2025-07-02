@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>테토/에겐 측정 & 랭킹</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .ranking-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .test-form h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .question {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .question h3 {
+            margin-bottom: 15px;
+            color: #2d3748;
+            font-size: 1.1rem;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .option:hover {
+            background: #edf2f7;
+        }
+
+        .option input[type="radio"] {
+            margin-right: 10px;
+            width: auto;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0fff4;
+            border-radius: 10px;
+            border: 2px solid #38a169;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .ranking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .ranking-header h2 {
+            color: #4a5568;
+            font-size: 1.5rem;
+        }
+
+        .ranking-filters {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .ranking-list {
+            min-height: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: transform 0.3s;
+        }
+
+        .ranking-item:hover {
+            transform: translateX(5px);
+        }
+
+        .rank-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 40px;
+        }
+
+        .rank-number.top3 {
+            color: #f59e0b;
+        }
+
+        .nickname {
+            flex: 1;
+            font-weight: 600;
+            margin-left: 15px;
+        }
+
+        .score-bar {
+            width: 120px;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .score-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s ease;
+        }
+
+        .teto-male-bar { background: linear-gradient(90deg, #3182ce, #2c5aa0); }
+        .teto-female-bar { background: linear-gradient(90deg, #e53e3e, #c53030); }
+        .egen-male-bar { background: linear-gradient(90deg, #38a169, #2f855a); }
+        .egen-female-bar { background: linear-gradient(90deg, #d69e2e, #b7791f); }
+
+        .type-badge {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .teto-male { background: #3182ce; color: white; }
+        .teto-female { background: #e53e3e; color: white; }
+        .egen-male { background: #38a169; color: white; }
+        .egen-female { background: #d69e2e; color: white; }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .ranking-filters {
+                flex-wrap: wrap;
+            }
+
+            .ranking-list {
+                max-height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🧬 테토/에겐 성향 측정 & 랭킹</h1>
+            <p>당신의 테스토스테론/에스트로겐 성향을 측정하고 다른 사람들과 비교해보세요</p>
+        </header>
+
+        <div class="main-content">
+            <div class="test-section">
+                <div class="test-form">
+                    <h2>📝 성향 측정 테스트</h2>
+                    
+                    <div class="form-group">
+                        <label for="nickname">닉네임</label>
+                        <input type="text" id="nickname" placeholder="랭킹에 표시될 닉네임을 입력하세요" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gender">성별</label>
+                        <select id="gender" required>
+                            <option value="">선택하세요</option>
+                            <option value="male">남성</option>
+                            <option value="female">여성</option>
+                        </select>
+                    </div>
+
+                    <form id="testForm">
+                        <div class="question">
+                            <h3>1. 문제 상황에 직면했을 때 나는?</h3>
+                            <div class="options">
+                                <label class="option">
+                                    <input type="radio" name="q1" value="teto">
+                                    직접적이고 즉시 해결책을 찾는다
+                                </label>
+                                <label class="option">
+                                    <input type="radio" name="q1" value="egen">
+                                    신중히 생각하고 다른 사람과 상의한다
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="question">
+                            <h3>2. 스트레스를 받을 때 나의 반응은?</h3>
+                            <div class="options">
+                                <label class="option">
+                                    <input type="radio" name="q2" value="teto">
+                                    적극적으로 행동하며 스트레스를 해소한다
+                                </label>
+                                <label class="option">
+                                    <input type="radio" name="q2" value="egen">
+                                    혼자 시간을 갖고 감정을 정리한다
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="question">
+                            <h3>3. 연애에서 나는?</h3>
+                            <div class="options">
+                                <label class="option">
+                                    <input type="radio" name="q3" value="teto">
+                                    주도적이고 적극적으로 접근한다
+                                </label>
+                                <label class="option">
+                                    <input type="radio" name="q3" value="egen">
+                                    상대방의 마음을 세심하게 살핀다
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="question">
+                            <h3>4. 친구들과의 관계에서 나는?</h3>
+                            <div class="options">
+                                <label class="option">
+                                    <input type="radio" name="q4" value="teto">
+                                    리더십을 발휘하고 분위기를 이끈다
+                                </label>
+                                <label class="option">
+                                    <input type="radio" name="q4" value="egen">
+                                    조화를 중시하고 갈등을 피한다
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="question">
+                            <h3>5. 의사결정을 할 때 나는?</h3>
+                            <div class="options">
+                                <label class="option">
+                                    <input type="radio" name="q5" value="teto">
+                                    빠르고 단호하게 결정한다
+                                </label>
+                                <label class="option">
+                                    <input type="radio" name="q5" value="egen">
+                                    여러 가능성을 충분히 고려한다
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="question">
+                            <h3>6. 갈등 상황에서 나는?</h3>
+                            <div class="options">
+                                <label class="option">
+                                    <input type="radio" name="q6" value="teto">
+                                    직접 대면하여 해결하려 한다
+                                </label>
+                                <label class="option">
+                                    <input type="radio" name="q6" value="egen">
+                                    감정적 상처를 최소화하려 한다
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="question">
+                            <h3>7. 새로운 환경에서 나는?</h3>
+                            <div class="options">
+                                <label class="option">
+                                    <input type="radio" name="q7" value="teto">
+                                    자신있게 다가가고 적응한다
+                                </label>
+                                <label class="option">
+                                    <input type="radio" name="q7" value="egen">
+                                    조심스럽게 관찰하며 적응한다
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="question">
+                            <h3>8. 목표를 추구할 때 나는?</h3>
+                            <div class="options">
+                                <label class="option">
+                                    <input type="radio" name="q8" value="teto">
+                                    경쟁심을 바탕으로 추진한다
+                                </label>
+                                <label class="option">
+                                    <input type="radio" name="q8" value="egen">
+                                    협력과 공감을 중시한다
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="submit-btn">🔍 결과 확인하기</button>
+                    </form>
+
+                    <div id="result" class="result">
+                        <h3 id="resultTitle"></h3>
+                        <p id="resultDescription"></p>
+                        <div id="scoreDisplay"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ranking-section">
+                <div class="ranking-header">
+                    <h2>🏆 실시간 랭킹</h2>
+                    <div class="ranking-filters">
+                        <button class="filter-btn active" data-filter="all">전체</button>
+                        <button class="filter-btn" data-filter="teto-male">테토남</button>
+                        <button class="filter-btn" data-filter="teto-female">테토녀</button>
+                        <button class="filter-btn" data-filter="egen-male">에겐남</button>
+                        <button class="filter-btn" data-filter="egen-female">에겐녀</button>
+                    </div>
+                </div>
+                
+                <div class="ranking-list" id="rankingList">
+                    <!-- 랭킹 데이터가 여기에 동적으로 추가됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 샘플 랭킹 데이터 (실제로는 서버에서 관리)
+        let rankingData = [
+            { nickname: "강철남자", type: "teto-male", score: 95, gender: "male" },
+            { nickname: "도도공주", type: "teto-female", score: 92, gender: "female" },
+            { nickname: "감성리더", type: "egen-male", score: 89, gender: "male" },
+            { nickname: "따뜻한마음", type: "egen-female", score: 87, gender: "female" },
+            { nickname: "행동파", type: "teto-male", score: 85, gender: "male" },
+            { nickname: "섬세함", type: "egen-female", score: 83, gender: "female" },
+            { nickname: "카리스마", type: "teto-male", score: 81, gender: "male" },
+            { nickname: "배려왕", type: "egen-male", score: 79, gender: "male" },
+            { nickname: "자유로운영혼", type: "teto-female", score: 77, gender: "female" },
+            { nickname: "공감능력자", type: "egen-female", score: 75, gender: "female" },
+            // 추가 샘플 데이터
+            { nickname: "불도저", type: "teto-male", score: 73, gender: "male" },
+            { nickname: "여왕벌", type: "teto-female", score: 71, gender: "female" },
+            { nickname: "힐링마스터", type: "egen-male", score: 69, gender: "male" },
+            { nickname: "다정다감", type: "egen-female", score: 67, gender: "female" },
+            { nickname: "승부사", type: "teto-male", score: 65, gender: "male" },
+            { nickname: "예술가", type: "egen-female", score: 63, gender: "female" },
+            { nickname: "리더십왕", type: "teto-male", score: 61, gender: "male" },
+            { nickname: "상담사", type: "egen-male", score: 59, gender: "male" },
+            { nickname: "독립적", type: "teto-female", score: 57, gender: "female" },
+            { nickname: "화목이", type: "egen-female", score: 55, gender: "female" }
+        ];
+
+        // 타입별 설명
+        const typeDescriptions = {
+            "teto-male": {
+                title: "🔥 테토남 (테스토스테론 남성)",
+                description: "주도적이고 적극적인 성향을 가진 남성형입니다. 직접적인 소통을 선호하고 목표 지향적입니다.",
+                traits: ["리더십", "적극성", "목표지향", "직접성"]
+            },
+            "teto-female": {
+                title: "⚡ 테토녀 (테스토스테론 여성)",
+                description: "독립적이고 주관이 뚜렷한 성향의 여성형입니다. 자신만의 길을 개척하는 것을 좋아합니다.",
+                traits: ["독립성", "주관성", "개척지향", "자신감"]
+            },
+            "egen-male": {
+                title: "🌿 에겐남 (에스트로겐 남성)",
+                description: "섬세하고 배려심이 깊은 성향의 남성형입니다. 감정적 소통과 조화를 중시합니다.",
+                traits: ["섬세함", "배려심", "공감능력", "조화지향"]
+            },
+            "egen-female": {
+                title: "🌸 에겐녀 (에스트로겐 여성)",
+                description: "온화하고 감성적인 성향의 여성형입니다. 관계를 중시하고 상대방을 이해하려 노력합니다.",
+                traits: ["온화함", "감성적", "관계지향", "이해심"]
+            }
+        };
+
+        // 테스트 폼 제출 처리
+        document.getElementById('testForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const nickname = document.getElementById('nickname').value;
+            const gender = document.getElementById('gender').value;
+            
+            if (!nickname || !gender) {
+                alert('닉네임과 성별을 모두 입력해주세요.');
+                return;
+            }
+
+            // 테스트 결과 계산
+            const formData = new FormData(this);
+            let tetoScore = 0;
+            let egenScore = 0;
+            
+            for (let i = 1; i <= 8; i++) {
+                const answer = formData.get(`q${i}`);
+                if (answer === 'teto') tetoScore++;
+                else if (answer === 'egen') egenScore++;
+            }
+
+            // 결과 유형 결정
+            const isTeto = tetoScore > egenScore;
+            const typeKey = `${isTeto ? 'teto' : 'egen'}-${gender}`;
+            const finalScore = Math.round(((isTeto ? tetoScore : egenScore) / 8 * 100) + Math.random() * 10);
+
+            // 결과 표시
+            const resultDiv = document.getElementById('result');
+            const typeInfo = typeDescriptions[typeKey];
+            
+            document.getElementById('resultTitle').textContent = typeInfo.title;
+            document.getElementById('resultDescription').textContent = typeInfo.description;
+            document.getElementById('scoreDisplay').innerHTML = `
+                <div style="margin-top: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-weight: 600;">${isTeto ? '테토' : '에겐'} 성향</span>
+                        </div>
+                        <div class="score-bar">
+                            <div class="score-fill ${typeKey.replace('-', '-')}-bar" style="width: ${finalScore}%"></div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; color: #666; font-size: 0.9rem;">
+                        주요 특성: ${typeInfo.traits.join(', ')}
+                    </div>
+                </div>
+            `;
+            
+            resultDiv.classList.add('show');
+
+            // 랭킹에 추가
+            const newEntry = {
+                nickname: nickname,
+                type: typeKey,
+                score: finalScore,
+                gender: gender
+            };
+            
+            rankingData.push(newEntry);
+            rankingData.sort((a, b) => b.score - a.score);
+            
+            // 상위 50명만 유지
+            if (rankingData.length > 50) {
+                rankingData = rankingData.slice(0, 50);
+            }
+            
+            updateRanking();
+            
+            // 결과로 스크롤
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // 랭킹 필터 처리
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                updateRanking(this.dataset.filter);
+            });
+        });
+
+        // 랭킹 업데이트 함수
+        function updateRanking(filter = 'all') {
+            const rankingList = document.getElementById('rankingList');
+            let filteredData = rankingData;
+            
+            if (filter !== 'all') {
+                filteredData = rankingData.filter(item => item.type === filter);
+            }
+            
+            rankingList.innerHTML = '';
+            
+            filteredData.forEach((item, index) => {
+                const rankItem = document.createElement('div');
+                rankItem.className = 'ranking-item';
+                
+                const rank = index + 1;
+                const isTop3 = rank <= 3;
+                
+                rankItem.innerHTML = `
+                    <div class="rank-number ${isTop3 ? 'top3' : ''}">${rank}등</div>
+                    <div class="nickname">${item.nickname}</div>
+                    <div class="score-bar">
+                        <div class="score-fill ${item.type}-bar" style="width: ${item.score}%"></div>
+                    </div>
+                    <div class="type-badge ${item.type}">${getTypeDisplayName(item.type)}</div>
+                `;
+                
+                rankingList.appendChild(rankItem);
+            });
+        }
+
+        // 타입 표시명 반환
+        function getTypeDisplayName(type) {
+            const names = {
+                'teto-male': '테토남',
+                'teto-female': '테토녀',
+                'egen-male': '에겐남',
+                'egen-female': '에겐녀'
+            };
+            return names[type] || type;
+        }
+
+        // 초기 랭킹 표시
+        updateRanking();
+    </script>
+</body>
+</html>
